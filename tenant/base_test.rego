@@ -276,14 +276,5 @@ test_all_tenants_contains_fra if {
 }
 
 test_all_tenants_count if {
-	count(base.all_tenants) == 4
+	count(base.all_tenants) == 9
 }
-
-
-
-
-
-
-
-
-

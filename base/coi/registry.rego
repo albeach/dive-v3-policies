@@ -210,11 +210,3 @@ unknown_coi_msg(coi) := msg if {
 	msg := sprintf("Unknown COI: %s", [coi])
 }
 
-
-
-
-
-
-
-
-

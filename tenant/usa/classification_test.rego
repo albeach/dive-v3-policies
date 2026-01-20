@@ -301,12 +301,3 @@ test_insufficient_clearance_message if {
 	contains(msg, "TOP SECRET")
 }
 
-
-
-
-
-
-
-
-
-

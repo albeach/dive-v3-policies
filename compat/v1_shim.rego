@@ -210,11 +210,3 @@ classification_equivalent(user_clearance, user_country, resource_classification,
 	nato_classification.is_clearance_sufficient(user_clearance, user_country, resource_classification, resource_country)
 }
 
-
-
-
-
-
-
-
-

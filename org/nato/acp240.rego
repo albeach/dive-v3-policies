@@ -43,61 +43,42 @@ check_authenticated if {
 # ACP-240 Section 4.2: Required Attributes
 # ============================================
 # Validates presence of mandatory attributes per ACP-240.
+# Uses else-chain to return first matching error (avoids OPA conflict).
 
 is_missing_required_attributes := msg if {
 	not input.subject.uniqueID
 	msg := "Missing required attribute: uniqueID"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	input.subject.uniqueID == ""
 	msg := "Empty uniqueID is not allowed"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	not input.subject.clearance
 	msg := "Missing required attribute: clearance"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	input.subject.clearance == ""
 	msg := "Empty clearance is not allowed"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	not input.subject.countryOfAffiliation
 	msg := "Missing required attribute: countryOfAffiliation"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	input.subject.countryOfAffiliation == ""
 	msg := "Empty countryOfAffiliation is not allowed"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	not input.resource.classification
 	msg := "Missing required attribute: resource.classification"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	not input.resource.releasabilityTo
 	msg := "Missing required attribute: resource.releasabilityTo"
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	input.resource.releasabilityTo == null
 	msg := "Null releasabilityTo is not allowed"
-}
-
-# Validate country codes
-is_missing_required_attributes := msg if {
+} else := msg if {
+	# Validate country codes
 	input.subject.countryOfAffiliation
 	input.subject.countryOfAffiliation != ""
 	not country.is_valid(input.subject.countryOfAffiliation)
 	msg := sprintf("Invalid country code: %s (must be ISO 3166-1 alpha-3)", [input.subject.countryOfAffiliation])
-}
-
-is_missing_required_attributes := msg if {
+} else := msg if {
 	country.is_valid(input.subject.countryOfAffiliation)
 	input.resource.releasabilityTo
 	count(input.resource.releasabilityTo) > 0
@@ -128,6 +109,7 @@ uses_classification_equivalency if {
 	input.resource.originalCountry != null
 }
 
+# Uses else-chain to return first matching error (avoids OPA conflict).
 # Clearance check with classification equivalency (cross-nation)
 is_insufficient_clearance := msg if {
 	uses_classification_equivalency
@@ -143,24 +125,38 @@ is_insufficient_clearance := msg if {
 		input.resource.originalClassification,
 		input.resource.originalCountry,
 	)
-}
-
-# Clearance check with DIVE V3 standard levels (backward compatibility)
-is_insufficient_clearance := msg if {
+} else := msg if {
+	# Fallback: User has localized clearance but resource uses NATO standard classification
+	# Normalize user's clearance to DIVE V3 standard and compare
 	not uses_classification_equivalency
+	input.subject.clearanceCountry
+	normalized_user_clearance := classification.get_dive_level(input.subject.clearance, input.subject.clearanceCountry)
+	normalized_user_clearance != null  # Normalization succeeded
+	not clearance.sufficient(normalized_user_clearance, input.resource.classification)
+	msg := sprintf("Insufficient clearance: user has %s (%s normalized), resource requires %s",
+		[input.subject.clearance, normalized_user_clearance, input.resource.classification])
+} else := msg if {
+	# User has clearanceCountry but clearance is not in known mapping - deny
+	not uses_classification_equivalency
+	input.subject.clearanceCountry
+	normalized_user_clearance := classification.get_dive_level(input.subject.clearance, input.subject.clearanceCountry)
+	normalized_user_clearance == null
+	msg := sprintf("Invalid clearance level: %s not recognized for country %s",
+		[input.subject.clearance, input.subject.clearanceCountry])
+} else := msg if {
+	# Clearance check with DIVE V3 standard levels (backward compatibility)
+	not uses_classification_equivalency
+	not input.subject.clearanceCountry  # No localization info, use direct comparison
 	not clearance.sufficient(input.subject.clearance, input.resource.classification)
 	msg := clearance.insufficient_clearance_msg(input.subject.clearance, input.resource.classification)
-}
-
-# Validate clearance level
-is_insufficient_clearance := msg if {
+} else := msg if {
+	# Validate clearance level - only when no clearanceCountry for normalization
 	not uses_classification_equivalency
+	not input.subject.clearanceCountry
 	not clearance.is_valid(input.subject.clearance)
 	msg := clearance.invalid_clearance_msg(input.subject.clearance)
-}
-
-# Validate classification level
-is_insufficient_clearance := msg if {
+} else := msg if {
+	# Validate classification level
 	not uses_classification_equivalency
 	not clearance.is_valid(input.resource.classification)
 	msg := clearance.invalid_clearance_msg(input.resource.classification)
@@ -175,12 +171,11 @@ check_clearance_sufficient if {
 # ============================================
 # Verifies subject's country is in resource releasabilityTo.
 
+# Uses else-chain to return first matching error (avoids OPA conflict).
 is_not_releasable_to_country := msg if {
 	count(input.resource.releasabilityTo) == 0
 	msg := "Resource releasabilityTo is empty (deny all)"
-}
-
-is_not_releasable_to_country := msg if {
+} else := msg if {
 	count(input.resource.releasabilityTo) > 0
 	user_country := input.subject.countryOfAffiliation
 	not user_country in input.resource.releasabilityTo
@@ -199,15 +194,14 @@ check_country_releasable if {
 # ============================================
 # Validates COI membership requirements.
 
+# Uses else-chain to return first matching error (avoids OPA conflict).
 is_coi_violation := msg if {
 	# US-ONLY requires exact match
 	"US-ONLY" in input.resource.COI
 	user_coi := object.get(input.subject, "acpCOI", [])
 	not user_coi == ["US-ONLY"]
 	msg := sprintf("Resource requires US-ONLY COI. User has COI: %v", [user_coi])
-}
-
-is_coi_violation := msg if {
+} else := msg if {
 	count(input.resource.COI) > 0
 	user_coi := object.get(input.subject, "acpCOI", [])
 	count(user_coi) > 0 # User has COI tags
@@ -218,9 +212,7 @@ is_coi_violation := msg if {
 		user_coi,
 		input.resource.COI,
 	])
-}
-
-is_coi_violation := msg if {
+} else := msg if {
 	count(input.resource.COI) > 0
 	user_coi := object.get(input.subject, "acpCOI", [])
 	count(user_coi) > 0
@@ -258,26 +250,21 @@ check_embargo_passed if {
 # ============================================
 # Validates Zero Trust Data Format integrity binding.
 
+# Uses else-chain to return first matching error (avoids OPA conflict).
 is_ztdf_integrity_violation := msg if {
 	input.resource.ztdf
 	input.resource.ztdf.integrityValidated == false
 	msg := "ZTDF integrity validation failed (cryptographic binding compromised)"
-}
-
-is_ztdf_integrity_violation := msg if {
+} else := msg if {
 	input.resource.ztdf
 	not input.resource.ztdf.policyHash
 	msg := "ZTDF policy hash missing (STANAG 4778 binding required)"
-}
-
-is_ztdf_integrity_violation := msg if {
+} else := msg if {
 	input.resource.ztdf
 	input.resource.ztdf.policyHash
 	not input.resource.ztdf.payloadHash
 	msg := "ZTDF payload hash missing (integrity protection required)"
-}
-
-is_ztdf_integrity_violation := msg if {
+} else := msg if {
 	input.resource.ztdf
 	input.resource.ztdf.policyHash
 	input.resource.ztdf.payloadHash
@@ -434,23 +421,23 @@ get_industry_max_classification(tenant_code) := max_class if {
 is_industry_clearance_exceeded := msg if {
 	# Only applies to industry users
 	resolved_org_type == "INDUSTRY"
-	
+
 	# Get user's country
 	user_country := input.subject.countryOfAffiliation
-	
+
 	# Get industry max classification for this tenant
 	max_class := get_industry_max_classification(user_country)
-	
+
 	# Get resource classification
 	resource_class := input.resource.classification
-	
+
 	# Get numeric levels
 	resource_level := get_clearance_level(resource_class)
 	max_level := get_clearance_level(max_class)
-	
+
 	# Check if resource exceeds industry cap
 	resource_level > max_level
-	
+
 	msg := sprintf("Industry clearance cap exceeded: resource=%s (%d) > tenant %s max=%s (%d)", [
 		resource_class,
 		resource_level,
@@ -490,12 +477,33 @@ is_coi_coherence_violation contains msg if {
 	msg := "COI EU-RESTRICTED cannot be combined with US-ONLY"
 }
 
+# RELAXED: Releasability ⊆ COI check (ACP-240 Section 4.7 - Explicit Release)
+#
+# The strict interpretation (releasabilityTo ⊆ COI_members) has been relaxed.
+# Rationale: releasabilityTo is the AUTHORITATIVE list of approved recipients.
+# COI indicates the originating community, but explicit release overrides.
+#
+# Example: COI: ["FVEY"] + releasabilityTo: ["ROU", "USA"] means
+#          "FVEY-relevant content with explicit approval to share with Romania"
+#
+# To enforce strict mode, enable input.context.strict_coi_coherence = true
 is_coi_coherence_violation contains msg if {
+	# Only enforce in strict mode
+	input.context.strict_coi_coherence == true
 	count(input.resource.COI) > 0
 	union := {c | some coi_name in input.resource.COI; some c in coi.members(coi_name)}
 	some r in input.resource.releasabilityTo
 	not r in union
-	msg := sprintf("Releasability country %s not in COI union %v", [r, union])
+	msg := sprintf("[STRICT] Releasability country %s not in COI union %v", [r, union])
+}
+
+# Informational warning (does not block access)
+coi_extended_release_warning := warning if {
+	count(input.resource.COI) > 0
+	union := {c | some coi_name in input.resource.COI; some c in coi.members(coi_name)}
+	extended := {r | some r in input.resource.releasabilityTo; not r in union}
+	count(extended) > 0
+	warning := sprintf("Explicit release beyond COI: %v extended to %v", [input.resource.COI, extended])
 }
 
 # NOFORN caveat enforcement
@@ -634,6 +642,11 @@ ztdf_enabled if {
 
 equivalency_applied if {
 	uses_classification_equivalency
+} else if {
+	# Fallback normalization: user has clearanceCountry and clearance was normalized
+	not uses_classification_equivalency
+	input.subject.clearanceCountry
+	classification.get_dive_level(input.subject.clearance, input.subject.clearanceCountry) != null
 } else := false
 
 equivalency_details := details if {
@@ -647,4 +660,3 @@ equivalency_details := details if {
 		"resource_classification_nato": input.resource.classification,
 	}
 } else := {}
-

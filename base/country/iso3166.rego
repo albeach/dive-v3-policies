@@ -160,11 +160,3 @@ invalid_countries_msg(codes) := msg if {
 	msg := sprintf("Invalid country codes: %v", [invalid])
 }
 
-
-
-
-
-
-
-
-
