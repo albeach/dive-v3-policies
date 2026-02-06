@@ -14,16 +14,16 @@ version := "5.0.0"
 policy_loaded := true
 
 # Utility: Check if value exists in array
-contains(arr, val) if {
+contains(arr, val) {
 	some i
 	arr[i] == val
 }
 
 # Utility: Check if any element from arr1 exists in arr2
-has_intersection(arr1, arr2) if {
+has_intersection(arr1, arr2) {
 	some i, j
 	arr1[i] == arr2[j]
 }
 
 # Git integration test marker - OPAL will detect this commit
-# Updated: 2026-02-06 09:05:00
+# Updated: 2026-02-06 09:10:00
