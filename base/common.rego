@@ -1,29 +1,25 @@
 package dive.base.common
 
-import rego.v1
-
 # Common utility functions and constants for DIVE V3 policies
 
 # Default deny - all policies start with explicit deny
-default allow := false
+default allow = false
 
 # Common constants
-version := "5.0.0"
+version = "5.0.0"
 
 # Test function to verify policy loading
-policy_loaded := true
+policy_loaded = true
 
 # Utility: Check if value exists in array
 contains(arr, val) {
-	some i
-	arr[i] == val
+	arr[_] = val
 }
 
 # Utility: Check if any element from arr1 exists in arr2
 has_intersection(arr1, arr2) {
-	some i, j
-	arr1[i] == arr2[j]
+	arr1[_] = arr2[_]
 }
 
 # Git integration test marker - OPAL will detect this commit
-# Updated: 2026-02-06 09:10:00
+# Updated: 2026-02-06 09:12:00
