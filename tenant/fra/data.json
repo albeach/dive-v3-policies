@@ -26,7 +26,7 @@
     "industry_max_classification": "CONFIDENTIAL"
   },
   "trusted_issuers": {
-    "https://fra-idp.dive25.com/realms/dive-v3-broker": {
+    "https://fra-idp.dive25.com/realms/dive-v3-broker-fra": {
       "tenant": "FRA",
       "name": "France Keycloak",
       "country": "FRA",

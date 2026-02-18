@@ -69,6 +69,12 @@ default_trusted_issuers := {
 		"country": "DEU",
 		"trust_level": "HIGH",
 	},
+	"https://deu-idp.dive25.com/realms/dive-v3-broker": {
+		"tenant": "DEU",
+		"name": "Germany Keycloak (Testing)",
+		"country": "DEU",
+		"trust_level": "HIGH",
+	},
 	# Local Development - Hub Keycloak (port 8443)
 	"https://localhost:8443/realms/dive-v3-broker-usa": {
 		"tenant": "USA",
@@ -79,6 +85,12 @@ default_trusted_issuers := {
 	"https://localhost:8443/realms/dive-v3-broker": {
 		"tenant": "USA",
 		"name": "USA Hub Keycloak Base Realm (Local Dev)",
+		"country": "USA",
+		"trust_level": "DEVELOPMENT",
+	},
+	"http://localhost:8443/realms/dive-v3-broker": {
+		"tenant": "USA",
+		"name": "USA Hub Keycloak Base Realm (Local Dev HTTP)",
 		"country": "USA",
 		"trust_level": "DEVELOPMENT",
 	},
@@ -199,6 +211,8 @@ default_tenant_configs := {
 		"mfa_required_above": "UNCLASSIFIED",
 		"max_session_hours": 10,
 		"default_coi": ["US-ONLY", "FVEY", "NATO"],
+		"allow_industry_access": true,
+		"industry_max_classification": "SECRET",
 	},
 	"FRA": {
 		"code": "FRA",
@@ -207,6 +221,8 @@ default_tenant_configs := {
 		"mfa_required_above": "UNCLASSIFIED",
 		"max_session_hours": 8,
 		"default_coi": ["FRA-US", "FVEY", "NATO"],
+		"allow_industry_access": true,
+		"industry_max_classification": "CONFIDENTIAL",
 	},
 	"GBR": {
 		"code": "GBR",
@@ -215,6 +231,8 @@ default_tenant_configs := {
 		"mfa_required_above": "UNCLASSIFIED",
 		"max_session_hours": 8,
 		"default_coi": ["GBR-US", "FVEY", "NATO"],
+		"allow_industry_access": true,
+		"industry_max_classification": "SECRET",
 	},
 	"DEU": {
 		"code": "DEU",
@@ -223,6 +241,8 @@ default_tenant_configs := {
 		"mfa_required_above": "UNCLASSIFIED",
 		"max_session_hours": 8,
 		"default_coi": ["DEU-US", "NATO"],
+		"allow_industry_access": true,
+		"industry_max_classification": "CONFIDENTIAL",
 	},
 }
 
@@ -277,11 +297,11 @@ subject_can_access_tenant if {
 # ============================================
 
 untrusted_issuer_msg(issuer) := msg if {
-	msg := sprintf("Untrusted token issuer: %s", [issuer])
+	msg := sprintf("Access denied: Your identity provider (%s) is not recognized as a trusted issuer in this system", [issuer])
 }
 
 federation_denied_msg(subject_tenant, target_tenant) := msg if {
-	msg := sprintf("Federation denied: %s cannot access %s resources", [
+	msg := sprintf("Federation access denied: Your organization (%s) does not have a federation agreement with %s to access their resources", [
 		subject_tenant,
 		target_tenant,
 	])

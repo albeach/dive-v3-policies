@@ -33,15 +33,8 @@ package dive.authz
 
 import rego.v1
 
-# Import base layer packages
-import data.dive.base.clearance as base_clearance
-import data.dive.base.coi as base_coi
-import data.dive.base.country as base_country
-import data.dive.base.time as base_time
-
 # Import organization layer
 import data.dive.org.nato.acp240
-import data.dive.org.nato.classification as nato_classification
 
 # Import tenant layer
 import data.dive.tenant.base as tenant_base
@@ -111,7 +104,7 @@ decision := {
 # Returns human-readable reason for the decision.
 # Priority order matches ACP-240 check sequence.
 
-reason := "Access granted - all conditions satisfied" if {
+reason := "Access granted — all authorization conditions are satisfied" if {
 	allow
 } else := msg if {
 	msg := acp240.is_not_authenticated
@@ -153,7 +146,7 @@ reason := "Access granted - all conditions satisfied" if {
 	tenant_base.is_from_trusted_origin
 	not tenant_base.subject_can_access_tenant
 	msg := tenant_base.federation_denied_msg(tenant_base.subject_tenant, tenant_base.current_tenant)
-} else := "Access denied"
+} else := "Access denied — no specific reason could be determined. Contact your administrator"
 
 # ============================================
 # Obligations

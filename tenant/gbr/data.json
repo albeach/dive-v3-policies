@@ -26,7 +26,7 @@
     "industry_max_classification": "SECRET"
   },
   "trusted_issuers": {
-    "https://gbr-idp.dive25.com/realms/dive-v3-broker": {
+    "https://gbr-idp.dive25.com/realms/dive-v3-broker-gbr": {
       "tenant": "GBR",
       "name": "UK Keycloak",
       "country": "GBR",

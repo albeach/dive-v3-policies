@@ -1,6 +1,6 @@
 {
   "trusted_issuers": {
-    "https://usa-idp.dive25.com/realms/dive-v3-broker": {
+    "https://usa-idp.dive25.com/realms/dive-v3-broker-usa": {
       "tenant": "USA",
       "name": "USA Keycloak",
       "country": "USA",
@@ -18,7 +18,7 @@
       "country": "USA",
       "trust_level": "HIGH"
     },
-    "https://fra-idp.dive25.com/realms/dive-v3-broker": {
+    "https://fra-idp.dive25.com/realms/dive-v3-broker-usa": {
       "tenant": "FRA",
       "name": "France Keycloak",
       "country": "FRA",
@@ -30,7 +30,7 @@
       "country": "FRA",
       "trust_level": "HIGH"
     },
-    "https://gbr-idp.dive25.com/realms/dive-v3-broker": {
+    "https://gbr-idp.dive25.com/realms/dive-v3-broker-usa": {
       "tenant": "GBR",
       "name": "UK Keycloak",
       "country": "GBR",
@@ -42,13 +42,13 @@
       "country": "GBR",
       "trust_level": "HIGH"
     },
-    "https://deu-idp.prosecurity.biz/realms/dive-v3-broker": {
+    "https://deu-idp.prosecurity.biz/realms/dive-v3-broker-usa": {
       "tenant": "DEU",
       "name": "Germany Keycloak (Production)",
       "country": "DEU",
       "trust_level": "HIGH"
     },
-    "https://deu-idp.dive25.com/realms/dive-v3-broker": {
+    "https://deu-idp.dive25.com/realms/dive-v3-broker-usa": {
       "tenant": "DEU",
       "name": "Germany Keycloak (Testing)",
       "country": "DEU",
@@ -60,13 +60,13 @@
       "country": "DEU",
       "trust_level": "HIGH"
     },
-    "http://localhost:8443/realms/dive-v3-broker": {
+    "http://localhost:8443/realms/dive-v3-broker-usa": {
       "tenant": "USA",
       "name": "Local Dev Keycloak",
       "country": "USA",
       "trust_level": "DEVELOPMENT"
     },
-    "https://localhost:8443/realms/dive-v3-broker": {
+    "https://localhost:8443/realms/dive-v3-broker-usa": {
       "tenant": "USA",
       "name": "Local Dev Keycloak (HTTPS)",
       "country": "USA",
